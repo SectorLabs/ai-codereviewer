@@ -221,6 +221,8 @@ async function main() {
     const newBaseSha = eventData.before;
     const newHeadSha = eventData.after;
 
+    const a = "";
+
     const response = await octokit.repos.compareCommits({
       headers: {
         accept: "application/vnd.github.v3.diff",
@@ -244,6 +246,7 @@ async function main() {
 
   const parsedDiff = parseDiff(diff);
 
+  // list of included patterns
   const excludePatterns = core
     .getInput("exclude")
     .split(",")
