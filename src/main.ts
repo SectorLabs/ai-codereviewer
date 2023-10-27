@@ -107,7 +107,11 @@ function createPrompt(file: File, chunk: Chunk, prDetails: PRDetails): string {
 - Provide at most ${REVIEW_MAX_COMMENTS} comments. It's up to you how to decide which comments to include.
 - Write the comment in GitHub Markdown format.
 - Use the given description only for the overall context and only comment the code.
-${REVIEW_PROJECT_CONTEXT ? `- Additional context regarding this PR's project: ${REVIEW_PROJECT_CONTEXT}` : ""}
+${
+  REVIEW_PROJECT_CONTEXT
+    ? `- Additional context regarding this PR's project: ${REVIEW_PROJECT_CONTEXT}`
+    : ""
+}
 - IMPORTANT: NEVER suggest adding comments to the code.
 
 Review the following code diff in the file "${
@@ -247,7 +251,7 @@ async function main() {
 
   const filteredDiff = parsedDiff.filter((file) => {
     return !excludePatterns.some((pattern) =>
-    minimatch(file.to ?? "", pattern)
+      minimatch(file.to ?? "", pattern)
     );
   });
 
