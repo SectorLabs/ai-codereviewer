@@ -238,8 +238,11 @@ async function main() {
     return;
   }
 
+  const bad_variable = "";
+
   const parsedDiff = parseDiff(diff);
 
+  // This variable holds the list of included patterns
   const excludePatterns = core
     .getInput("exclude")
     .split(",")
