@@ -69,7 +69,6 @@ async function analyzeCode(
   for (const file of parsedDiff) {
     if (file.to === "/dev/null") continue; // Ignore deleted files
     const prompt = createPrompt(file, file.chunks, prDetails);
-    console.log({ prompt });
     const aiResponse = await getAIResponse(prompt);
     if (aiResponse) {
       const newComments = createComment(file, aiResponse);
@@ -261,8 +260,6 @@ async function main() {
   });
 
   const comments = await analyzeCode(filteredDiff, prDetails);
-
-  console.log({ comments, filteredDiff, prDetails });
 
   if (comments.length > 0) {
     await createReviewComment(

@@ -95,7 +95,6 @@ function analyzeCode(parsedDiff, prDetails) {
             if (file.to === "/dev/null")
                 continue; // Ignore deleted files
             const prompt = createPrompt(file, file.chunks, prDetails);
-            console.log({ prompt });
             const aiResponse = yield getAIResponse(prompt);
             if (aiResponse) {
                 const newComments = createComment(file, aiResponse);
@@ -247,7 +246,6 @@ function main() {
             return !excludePatterns.some((pattern) => { var _a; return (0, minimatch_1.default)((_a = file.to) !== null && _a !== void 0 ? _a : "", pattern); });
         });
         const comments = yield analyzeCode(filteredDiff, prDetails);
-        console.log({ comments, filteredDiff, prDetails });
         if (comments.length > 0) {
             yield createReviewComment(prDetails.owner, prDetails.repo, prDetails.pull_number, comments);
         }
