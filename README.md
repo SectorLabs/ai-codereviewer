@@ -45,6 +45,8 @@ jobs:
           OPENAI_API_MODEL: "gpt-4" # Optional: defaults to "gpt-4"
           REVIEW_MAX_COMMENTS: 2 # Optional: defaults to 5
           REVIEW_PROJECT_CONTEXT: "PHP 8.3 + Laravel 10 + PHPUnit 7." # Optional
+          REVIEW_SHOULD_USER_PR_DESCRIPTION: false # Optional: defaults to true
+          REVIEW_MIN_FILE_LINE_CHANGES: 100 # Optional: defaults to 0
           exclude: "**/*.json, **/*.md" # Optional: exclude patterns separated by commas
 ```
 

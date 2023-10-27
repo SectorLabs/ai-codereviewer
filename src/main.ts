@@ -10,6 +10,13 @@ const OPENAI_API_KEY: string = core.getInput("OPENAI_API_KEY");
 const OPENAI_API_MODEL: string = core.getInput("OPENAI_API_MODEL");
 const REVIEW_MAX_COMMENTS: string = core.getInput("REVIEW_MAX_COMMENTS");
 const REVIEW_PROJECT_CONTEXT: string = core.getInput("REVIEW_PROJECT_CONTEXT");
+const REVIEW_SHOULD_USER_PR_DESCRIPTION: boolean = core.getBooleanInput(
+  "REVIEW_SHOULD_USER_PR_DESCRIPTION"
+);
+const REVIEW_MIN_FILE_LINE_CHANGES: number = parseInt(
+  core.getInput("REVIEW_MIN_FILE_LINE_CHANGES"),
+  10
+);
 
 const octokit = new Octokit({ auth: GITHUB_TOKEN });
 
@@ -68,6 +75,8 @@ async function analyzeCode(
 
   for (const file of parsedDiff) {
     if (file.to === "/dev/null") continue; // Ignore deleted files
+    if (file.additions + file.deletions < REVIEW_MIN_FILE_LINE_CHANGES)
+      continue; // Ignore files with few changes
     const prompt = createPrompt(file, file.chunks, prDetails);
     const aiResponse = await getAIResponse(prompt);
     if (aiResponse) {
@@ -124,7 +133,7 @@ Pull request title: ${prDetails.title}
 Pull request description:
 
 ---
-${prDetails.description}
+${REVIEW_SHOULD_USER_PR_DESCRIPTION ? prDetails.description : ""}
 ---
 
 Git diffs to review (each diff starts with "\`\`\`diff"):

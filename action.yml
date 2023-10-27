@@ -19,6 +19,14 @@ inputs:
     description: "Project context to include in a review. E.g. Typescript with NestJS + TypeORM"
     required: false
     default: ""
+  REVIEW_SHOULD_USER_PR_DESCRIPTION:
+    description: "Whether the PR description should be used when creating the review."
+    required: false
+    default: true
+  REVIEW_MIN_FILE_LINE_CHANGES:
+    description: "Minimum number of changes in a file such that it gets reviewed."
+    required: false
+    default: 0
   exclude:
     description: "Glob patterns to exclude files from the diff analysis"
     required: false

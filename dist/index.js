@@ -53,6 +53,8 @@ const OPENAI_API_KEY = core.getInput("OPENAI_API_KEY");
 const OPENAI_API_MODEL = core.getInput("OPENAI_API_MODEL");
 const REVIEW_MAX_COMMENTS = core.getInput("REVIEW_MAX_COMMENTS");
 const REVIEW_PROJECT_CONTEXT = core.getInput("REVIEW_PROJECT_CONTEXT");
+const REVIEW_SHOULD_USER_PR_DESCRIPTION = core.getBooleanInput("REVIEW_SHOULD_USER_PR_DESCRIPTION");
+const REVIEW_MIN_FILE_LINE_CHANGES = parseInt(core.getInput("REVIEW_MIN_FILE_LINE_CHANGES"), 10);
 const octokit = new rest_1.Octokit({ auth: GITHUB_TOKEN });
 const configuration = new openai_1.Configuration({
     apiKey: OPENAI_API_KEY,
@@ -94,6 +96,8 @@ function analyzeCode(parsedDiff, prDetails) {
         for (const file of parsedDiff) {
             if (file.to === "/dev/null")
                 continue; // Ignore deleted files
+            if (file.additions + file.deletions < REVIEW_MIN_FILE_LINE_CHANGES)
+                continue; // Ignore files with few changes
             const prompt = createPrompt(file, file.chunks, prDetails);
             const aiResponse = yield getAIResponse(prompt);
             if (aiResponse) {
@@ -139,7 +143,7 @@ Pull request title: ${prDetails.title}
 Pull request description:
 
 ---
-${prDetails.description}
+${REVIEW_SHOULD_USER_PR_DESCRIPTION ? prDetails.description : ""}
 ---
 
 Git diffs to review (each diff starts with "\`\`\`diff"):
