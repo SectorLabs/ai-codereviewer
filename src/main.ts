@@ -68,15 +68,13 @@ async function analyzeCode(
 
   for (const file of parsedDiff) {
     if (file.to === "/dev/null") continue; // Ignore deleted files
-    for (const chunk of file.chunks) {
-      const prompt = createPrompt(file, chunk, prDetails);
-      console.log({ prompt });
-      const aiResponse = await getAIResponse(prompt);
-      if (aiResponse) {
-        const newComments = createComment(file, chunk, aiResponse);
-        if (newComments) {
-          comments.push(...newComments);
-        }
+    const prompt = createPrompt(file, file.chunks, prDetails);
+    console.log({ prompt });
+    const aiResponse = await getAIResponse(prompt);
+    if (aiResponse) {
+      const newComments = createComment(file, aiResponse);
+      if (newComments) {
+        comments.push(...newComments);
       }
     }
   }
@@ -99,7 +97,11 @@ async function getBaseAndHeadShas(
   };
 }
 
-function createPrompt(file: File, chunk: Chunk, prDetails: PRDetails): string {
+function createPrompt(
+  file: File,
+  chunks: Chunk[],
+  prDetails: PRDetails
+): string {
   return `Your task is to review pull requests. Instructions:
 - Provide the response in following JSON format:  [{"lineNumber":  <line_number>, "reviewComment": "<review comment>"}]
 - Do not give positive comments or compliments.
@@ -113,8 +115,9 @@ ${
     : ""
 }
 - IMPORTANT: NEVER suggest adding comments to the code.
+- IMPORTANT: Evaluate all the diffs in the file before adding any comments.
 
-Review the following code diff in the file "${
+Review the following code diffs in the file "${
     file.to
   }" and take the pull request title and description into account when writing the response.
 
@@ -125,15 +128,18 @@ Pull request description:
 ${prDetails.description}
 ---
 
-Git diff to review:
-
-\`\`\`diff
-${chunk.content}
-${chunk.changes
-  // @ts-expect-error - ln and ln2 exists where needed
-  .map((c) => `${c.ln ? c.ln : c.ln2} ${c.content}`)
+Git diffs to review (each diff starts with "\`\`\`diff"):
+${chunks
+  .map((chunk) => {
+    return `\`\`\`diff
+    ${chunk.content}
+    ${chunk.changes
+      // @ts-expect-error - ln and ln2 exists where needed
+      .map((c) => `${c.ln ? c.ln : c.ln2} ${c.content}`)
+      .join("\n")}
+      \`\`\``;
+  })
   .join("\n")}
-\`\`\`
 `;
 }
 
@@ -171,7 +177,6 @@ async function getAIResponse(prompt: string): Promise<Array<{
 
 function createComment(
   file: File,
-  chunk: Chunk,
   aiResponses: Array<{
     lineNumber: string;
     reviewComment: string;

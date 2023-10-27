@@ -94,15 +94,13 @@ function analyzeCode(parsedDiff, prDetails) {
         for (const file of parsedDiff) {
             if (file.to === "/dev/null")
                 continue; // Ignore deleted files
-            for (const chunk of file.chunks) {
-                const prompt = createPrompt(file, chunk, prDetails);
-                console.log({ prompt });
-                const aiResponse = yield getAIResponse(prompt);
-                if (aiResponse) {
-                    const newComments = createComment(file, chunk, aiResponse);
-                    if (newComments) {
-                        comments.push(...newComments);
-                    }
+            const prompt = createPrompt(file, file.chunks, prDetails);
+            console.log({ prompt });
+            const aiResponse = yield getAIResponse(prompt);
+            if (aiResponse) {
+                const newComments = createComment(file, aiResponse);
+                if (newComments) {
+                    comments.push(...newComments);
                 }
             }
         }
@@ -122,7 +120,7 @@ function getBaseAndHeadShas(owner, repo, pull_number) {
         };
     });
 }
-function createPrompt(file, chunk, prDetails) {
+function createPrompt(file, chunks, prDetails) {
     return `Your task is to review pull requests. Instructions:
 - Provide the response in following JSON format:  [{"lineNumber":  <line_number>, "reviewComment": "<review comment>"}]
 - Do not give positive comments or compliments.
@@ -134,8 +132,9 @@ ${REVIEW_PROJECT_CONTEXT
         ? `- Additional context regarding this PR's project: ${REVIEW_PROJECT_CONTEXT}`
         : ""}
 - IMPORTANT: NEVER suggest adding comments to the code.
+- IMPORTANT: Evaluate all the diffs in the file before adding any comments.
 
-Review the following code diff in the file "${file.to}" and take the pull request title and description into account when writing the response.
+Review the following code diffs in the file "${file.to}" and take the pull request title and description into account when writing the response.
 
 Pull request title: ${prDetails.title}
 Pull request description:
@@ -144,15 +143,18 @@ Pull request description:
 ${prDetails.description}
 ---
 
-Git diff to review:
-
-\`\`\`diff
-${chunk.content}
-${chunk.changes
-        // @ts-expect-error - ln and ln2 exists where needed
-        .map((c) => `${c.ln ? c.ln : c.ln2} ${c.content}`)
+Git diffs to review (each diff starts with "\`\`\`diff"):
+${chunks
+        .map((chunk) => {
+        return `\`\`\`diff
+    ${chunk.content}
+    ${chunk.changes
+            // @ts-expect-error - ln and ln2 exists where needed
+            .map((c) => `${c.ln ? c.ln : c.ln2} ${c.content}`)
+            .join("\n")}
+      \`\`\``;
+    })
         .join("\n")}
-\`\`\`
 `;
 }
 function getAIResponse(prompt) {
@@ -182,7 +184,7 @@ function getAIResponse(prompt) {
         }
     });
 }
-function createComment(file, chunk, aiResponses) {
+function createComment(file, aiResponses) {
     return aiResponses.flatMap((aiResponse) => {
         if (!file.to) {
             return [];
