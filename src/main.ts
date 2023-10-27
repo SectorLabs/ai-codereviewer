@@ -70,7 +70,7 @@ async function analyzeCode(
     if (file.to === "/dev/null") continue; // Ignore deleted files
     for (const chunk of file.chunks) {
       const prompt = createPrompt(file, chunk, prDetails);
-      console.log({ prompt });
+      console.warn({ prompt });
       const aiResponse = await getAIResponse(prompt);
       if (aiResponse) {
         const newComments = createComment(file, chunk, aiResponse);
@@ -253,7 +253,7 @@ async function main() {
 
   const comments = await analyzeCode(filteredDiff, prDetails);
 
-  console.log({ comments, filteredDiff, prDetails });
+  console.warn({ comments, filteredDiff, prDetails });
 
   if (comments.length > 0) {
     await createReviewComment(
