@@ -10,6 +10,7 @@ const OPENAI_API_KEY: string = core.getInput("OPENAI_API_KEY");
 const OPENAI_API_MODEL: string = core.getInput("OPENAI_API_MODEL");
 const REVIEW_MAX_COMMENTS: string = core.getInput("REVIEW_MAX_COMMENTS");
 const REVIEW_PROJECT_CONTEXT: string = core.getInput("REVIEW_PROJECT_CONTEXT");
+const REVIW_MIN_COMMENTS: string = core.getInput("REVIEW_MIN_COMMENTS");
 
 const octokit = new Octokit({ auth: GITHUB_TOKEN });
 
@@ -64,6 +65,7 @@ async function analyzeCode(
   parsedDiff: File[],
   prDetails: PRDetails
 ): Promise<Array<{ body: string; path: string; line: number }>> {
+  // The list of comments returned by ChatGPT
   const comments: Array<{ body: string; path: string; line: number }> = [];
 
   for (const file of parsedDiff) {
@@ -208,6 +210,23 @@ async function createReviewComment(
     event: "COMMENT",
   });
 }
+
+// This is an unused function
+async function createReviewCommentv2(
+  owner: string,
+  repo: string,
+  pull_number: number,
+  comments: Array<{ body: string; path: string; line: number }>
+): Promise<void> {
+  await octokit.pulls.createReview({
+    owner,
+    repo,
+    pull_number,
+    comments,
+    event: "COMMENT",
+  });
+}
+
 
 async function main() {
   const prDetails = await getPRDetails();
