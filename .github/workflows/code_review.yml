@@ -16,4 +16,7 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          REVIEW_SHOULD_USER_PR_DESCRIPTION: false
+          REVIEW_MIN_FILE_LINE_CHANGES: 10
+          REVIEW_MAX_COMMENTS: 3
           exclude: "yarn.lock,dist/**"
